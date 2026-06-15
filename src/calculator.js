@@ -32,13 +32,38 @@ function divide(a, b) {
   return a / b;
 }
 
+// New operations requested in the latest feature issue:
+// - modulo: remainder of a divided by b
+// - power: base raised to exponent
+// - squareRoot: square root of n (error on negative inputs)
+function modulo(a, b) {
+  if (b === 0) {
+    throw new Error('Modulo by zero');
+  }
+  return a % b;
+}
+
+function power(base, exponent) {
+  return Math.pow(base, exponent);
+}
+
+function squareRoot(n) {
+  if (n < 0) {
+    throw new Error('Cannot take square root of negative number');
+  }
+  return Math.sqrt(n);
+}
+
 // CLI helpers - keep CLI behavior but throw for testable functions
 function printUsage() {
-  console.log('Usage: node src/calculator.js <operation> <num1> <num2>');
-  console.log('Operations: add, subtract, multiply, divide');
+  console.log('Usage: node src/calculator.js <operation> <num1> <num2?>');
+  console.log('Operations: add, subtract, multiply, divide, mod, pow, sqrt');
   console.log('Examples:');
   console.log('  node src/calculator.js add 2 3');
   console.log('  node src/calculator.js divide 10 2');
+  console.log('  node src/calculator.js mod 10 3');
+  console.log('  node src/calculator.js pow 2 8');
+  console.log('  node src/calculator.js sqrt 16');
 }
 
 function parseNumber(value, name) {
@@ -50,7 +75,7 @@ function parseNumber(value, name) {
 }
 
 function main(argv) {
-  if (argv.length < 3) {
+  if (argv.length < 2) {
     printUsage();
     console.error('Error: Missing arguments');
     process.exit(1);
@@ -58,9 +83,22 @@ function main(argv) {
 
   const op = argv[0].toLowerCase();
   let a, b;
+
   try {
-    a = parseNumber(argv[1], 'First operand');
-    b = parseNumber(argv[2], 'Second operand');
+    if (op === 'sqrt' || op === 'sqr' || op === 'sqrt') {
+      // sqrt expects a single operand
+      if (argv.length < 2) {
+        throw new Error('Missing operand for sqrt');
+      }
+      a = parseNumber(argv[1], 'Operand');
+    } else {
+      // all other operations expect two operands
+      if (argv.length < 3) {
+        throw new Error('Missing operands');
+      }
+      a = parseNumber(argv[1], 'First operand');
+      b = parseNumber(argv[2], 'Second operand');
+    }
   } catch (err) {
     console.error('Error:', err.message);
     process.exit(1);
@@ -81,6 +119,17 @@ function main(argv) {
       case 'divide':
         result = divide(a, b);
         break;
+      case 'mod':
+      case 'modulo':
+        result = modulo(a, b);
+        break;
+      case 'pow':
+      case 'power':
+        result = power(a, b);
+        break;
+      case 'sqrt':
+        result = squareRoot(a);
+        break;
       default:
         printUsage();
         console.error(`Error: Unsupported operation: ${op}`);
@@ -95,7 +144,7 @@ function main(argv) {
 }
 
 // Export functions for unit testing
-module.exports = { add, subtract, multiply, divide };
+module.exports = { add, subtract, multiply, divide, modulo, power, squareRoot };
 
 if (require.main === module) {
   // process.argv: [node, script, ...]
