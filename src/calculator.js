@@ -1,18 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * Node.js CLI Calculator
- * Supported operations (exported for testing):
- * - add:       addition (a + b)
- * - subtract:  subtraction (a - b)
- * - multiply:  multiplication (a * b)
- * - divide:    division (a / b)
- *
- * The file also provides a small CLI wrapper so the tool can be executed
- * directly (node src/calculator.js <operation> <num1> <num2>).
- */
-
-// Pure functions for arithmetic (easy to test)
 function add(a, b) {
   return a + b;
 }
@@ -32,11 +19,8 @@ function divide(a, b) {
   return a / b;
 }
 
-// New operations requested in the latest feature issue:
-// - modulo: remainder of a divided by b
-// - power: base raised to exponent
-// - squareRoot: square root of n (error on negative inputs)
-function modulo(a, b) {
+// New required operations
+function mod(a, b) {
   if (b === 0) {
     throw new Error('Modulo by zero');
   }
@@ -47,23 +31,17 @@ function power(base, exponent) {
   return Math.pow(base, exponent);
 }
 
-function squareRoot(n) {
+function sqrt(n) {
   if (n < 0) {
     throw new Error('Cannot take square root of negative number');
   }
   return Math.sqrt(n);
 }
 
-// CLI helpers - keep CLI behavior but throw for testable functions
+// CLI (keeps compatibility with the exercise)
 function printUsage() {
   console.log('Usage: node src/calculator.js <operation> <num1> <num2?>');
   console.log('Operations: add, subtract, multiply, divide, mod, pow, sqrt');
-  console.log('Examples:');
-  console.log('  node src/calculator.js add 2 3');
-  console.log('  node src/calculator.js divide 10 2');
-  console.log('  node src/calculator.js mod 10 3');
-  console.log('  node src/calculator.js pow 2 8');
-  console.log('  node src/calculator.js sqrt 16');
 }
 
 function parseNumber(value, name) {
@@ -77,7 +55,6 @@ function parseNumber(value, name) {
 function main(argv) {
   if (argv.length < 2) {
     printUsage();
-    console.error('Error: Missing arguments');
     process.exit(1);
   }
 
@@ -85,17 +62,11 @@ function main(argv) {
   let a, b;
 
   try {
-    if (op === 'sqrt' || op === 'sqr' || op === 'sqrt') {
-      // sqrt expects a single operand
-      if (argv.length < 2) {
-        throw new Error('Missing operand for sqrt');
-      }
+    if (op === 'sqrt') {
+      if (argv.length < 2) throw new Error('Missing operand');
       a = parseNumber(argv[1], 'Operand');
     } else {
-      // all other operations expect two operands
-      if (argv.length < 3) {
-        throw new Error('Missing operands');
-      }
+      if (argv.length < 3) throw new Error('Missing operands');
       a = parseNumber(argv[1], 'First operand');
       b = parseNumber(argv[2], 'Second operand');
     }
@@ -105,6 +76,7 @@ function main(argv) {
   }
 
   let result;
+
   try {
     switch (op) {
       case 'add':
@@ -121,18 +93,18 @@ function main(argv) {
         break;
       case 'mod':
       case 'modulo':
-        result = modulo(a, b);
+        result = mod(a, b);
         break;
       case 'pow':
       case 'power':
         result = power(a, b);
         break;
       case 'sqrt':
-        result = squareRoot(a);
+        result = sqrt(a);
         break;
       default:
         printUsage();
-        console.error(`Error: Unsupported operation: ${op}`);
+        console.error(`Unsupported operation: ${op}`);
         process.exit(1);
     }
   } catch (err) {
@@ -143,11 +115,26 @@ function main(argv) {
   console.log(result);
 }
 
-// Export functions for unit testing
-module.exports = { add, subtract, multiply, divide, modulo, power, squareRoot };
+// Export functions (include both original names and requested aliases)
+const modulo = mod;
+const squareRoot = sqrt;
+
+module.exports = {
+  add,
+  subtract,
+  multiply,
+  divide,
+  // keep original short names for backward compatibility
+  mod,
+  sqrt,
+  // expose requested names
+  modulo,
+  power,
+  squareRoot
+};
 
 if (require.main === module) {
-  // process.argv: [node, script, ...]
   const args = process.argv.slice(2);
   main(args);
 }
+
